@@ -96,7 +96,7 @@ Twitch, YouTube, VK, Kick, Trovo, W.TV и другие.
 
 ## Требования
 
-RutonyChat. Интернет не нужен — тема работает офлайн.
+RutonyChat
 
 ---
 
