@@ -1,0 +1,153 @@
+@charset "utf-8";
+/* minimal-chat - no cards, just text. Nothing covers the gameplay. */
+
+html, body {
+	background-color: transparent;
+	margin: 0;
+	padding: 0;
+	overflow: hidden;
+	width: 100%;
+	height: 100%;
+	font-size: 17px;
+	font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+}
+
+#chat-wrapper {
+	position: relative;
+	overflow: auto;
+	height: 100%;
+	width: 100%;
+}
+
+#content, #chat-wrapper { box-sizing: border-box; }
+
+/* one chat line - flat, no background, no border */
+.mess {
+	display: flex;
+	align-items: baseline;
+	flex-wrap: wrap;
+	line-height: 1.45;
+	padding: 1px 12px;
+	word-break: break-word;
+}
+
+/* replies get a thin left tick instead of a whole card */
+.k-reply .name { font-style: italic; }
+.k-alert  .name { text-transform: uppercase; letter-spacing: .3px; }
+
+/* ---------------- avatar (off by default) ---------------- */
+.av {
+	flex: 0 0 auto;
+	display: none;
+	align-items: center;
+	margin-right: 6px;
+}
+
+.av-img,
+.av-fallback {
+	width: 20px;
+	height: 20px;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	object-fit: cover;
+	font-size: 11px;
+	font-weight: 800;
+	color: #06070F;
+}
+
+/* ---------------- nickname ---------------- */
+.name {
+	font-weight: 800;
+	font-size: 17px;
+	font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+	color: #7FD3FF;
+	white-space: nowrap;
+	text-shadow: 0 3px 4px rgba(0, 0, 0, 0.85);
+}
+
+.badges {
+	display: flex;
+	align-items: center;
+	gap: 3px;
+	flex: 0 0 auto;
+	margin-left: 4px;
+}
+
+.badges img {
+	height: 14px;
+	vertical-align: middle;
+	margin-bottom: 0;
+}
+
+.colon {
+	color: #6E7A8C;
+	margin: 0 5px 0 2px;
+	flex: 0 0 auto;
+	text-shadow: 0 3px 4px rgba(0, 0, 0, 0.85);
+}
+
+/* ---------------- message text ---------------- */
+.body {
+	font-size: 17px;
+	line-height: 1.45;
+	color: #FFFFFF;
+	font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+	text-shadow: 0 3px 4px rgba(0, 0, 0, 0.85);
+	overflow-wrap: anywhere;
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.replytext { color: #FFD479; }
+
+.body a {
+	color: #7CE7C4;
+	text-decoration: none;
+	text-shadow: 0 3px 4px rgba(0, 0, 0, 0.85);
+}
+
+img { margin-bottom: -2px; }
+
+/* ---------------- platform badge (small, colour only) ---------------- */
+.site {
+	flex: 0 0 auto;
+	display: inline-flex;
+	align-items: center;
+	margin-left: 4px;
+}
+
+.site-icon {
+	width: 15px;
+	height: 15px;
+	border-radius: 4px;
+	padding: 1px;
+	display: block;
+	object-fit: contain;
+	background: rgba(0, 0, 0, 0.35);
+	/* тонкое светлое кольцо: тёмные логотипы (W.TV) иначе сливаются в пятно */
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+}
+
+/* ---------------- animation: quick and quiet ---------------- */
+.m-in {
+	animation: mIn 0.22s ease-out both;
+}
+
+@keyframes mIn {
+	from { opacity: 0; transform: translateX(-6px); }
+	to   { opacity: 1; transform: translateX(0); }
+}
+
+.m-out {
+	animation: mOut 0.45s ease-in both;
+}
+
+@keyframes mOut {
+	0%   { opacity: 1; transform: translateX(0); max-height: 90px; margin-bottom: 0; }
+	40%  { opacity: 0.5; }
+	100% { opacity: 0; transform: translateX(12px); max-height: 0; margin-bottom: -2px; }
+}
+
+#bottom { height: 0; }

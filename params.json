@@ -1,0 +1,95 @@
+{
+  "themeIndex": "minimal-chat",
+  "params": [
+    {
+      "name": "FontNickname",
+      "desc": { "russian": "Шрифт никнейма", "english": "Font Nickname", "tchinese": "Font Nickname" },
+      "type": "font",
+      "default": { "name": "Segoe UI", "size": 17 }
+    },
+    {
+      "name": "FontText",
+      "desc": { "russian": "Шрифт текста", "english": "Font text", "tchinese": "Font text" },
+      "type": "font",
+      "default": { "name": "Segoe UI", "size": 17 }
+    },
+    {
+      "name": "NicknameColor",
+      "desc": { "russian": "Цвет никнейма", "english": "Nickname color", "tchinese": "Nickname color" },
+      "type": "color",
+      "default": "#7FD3FF"
+    },
+    {
+      "name": "TextColor",
+      "desc": { "russian": "Цвет текста", "english": "Text color", "tchinese": "Text color" },
+      "type": "color",
+      "default": "#FFFFFF"
+    },
+    {
+      "name": "ReplyColor",
+      "desc": { "russian": "Цвет реплая", "english": "Reply color", "tchinese": "Reply color" },
+      "type": "color",
+      "default": "#FFD479"
+    },
+    {
+      "name": "LinksColor",
+      "desc": { "russian": "Цвет ссылок", "english": "Links color", "tchinese": "Links color" },
+      "type": "color",
+      "default": "#7CE7C4"
+    },
+    {
+      "name": "ShadowColor",
+      "desc": { "russian": "Цвет тени", "english": "Shadow color", "tchinese": "Shadow color" },
+      "type": "color",
+      "default": "#000000"
+    },
+    {
+      "name": "ShadowSize",
+      "desc": { "russian": "Размер тени (px) - влияет на читаемость поверх игры", "english": "Shadow size (px)", "tchinese": "Shadow size (px)" },
+      "type": "integer",
+      "default": 3,
+      "min": 0,
+      "max": 20
+    },
+    {
+      "name": "NicknameBold",
+      "desc": { "russian": "Жирный никнейм", "english": "Bold nickname", "tchinese": "Bold nickname" },
+      "type": "bool",
+      "default": true
+    },
+    {
+      "name": "QtyMessages",
+      "desc": { "russian": "Количество сообщений", "english": "Messages count", "tchinese": "Messages count" },
+      "type": "integer",
+      "default": 9,
+      "min": 1,
+      "max": 100
+    },
+    {
+      "name": "TimeNewMessages",
+      "desc": { "russian": "Время показа сообщения (сек)", "english": "Message display time (sec)", "tchinese": "Message display time (sec)" },
+      "type": "integer",
+      "default": 15,
+      "min": 2,
+      "max": 600
+    },
+    {
+      "name": "HideMessages",
+      "desc": { "russian": "Скрывать сообщения", "english": "Hide messages", "tchinese": "Hide messages" },
+      "type": "bool",
+      "default": true
+    },
+    {
+      "name": "ShowAvatars",
+      "desc": { "russian": "Показывать аватары", "english": "Show avatars", "tchinese": "Show avatars" },
+      "type": "bool",
+      "default": false
+    },
+    {
+      "name": "ShowSiteIcons",
+      "desc": { "russian": "Показывать иконки площадок", "english": "Show site icons", "tchinese": "Show site icons" },
+      "type": "bool",
+      "default": true
+    }
+  ]
+}

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta content='width=device-width, initial-scale=1' name='viewport'/>
+<link href="chat.css" rel="stylesheet" type="text/css" />
+<link href='../perfect-scrollbar.min.css' rel='stylesheet' type="text/css" />
+<link rel="stylesheet" href="../animate.css">
+
+<script src="../jquery.min.js"></script>
+<script src="../jquery.tmpl.js"></script>
+<script src="../extended_methods.js"></script>
+<script src="../perfect-scrollbar.jquery.min.js"></script>
+
+<script type="text/javascript">
+
+	var autoScroll = true;
+
+	$(document).ready(function() {
+		SetAutoScrollPerfect();
+		SetSocket();
+	});
+
+	// ======================================
+
+	var themeIndex = "minimal-chat";
+
+	var qtyMessages    = 9;
+	var qtyAllMessages = 300;
+	var timeNewMessage = 15000;
+	var hideMessages   = true;
+	var showSiteIcons  = true;
+	var showAvatars    = false;
+	var nicknameBold   = true;
+
+	var cNick    = "#7FD3FF";
+	var cText    = "#FFFFFF";
+	var cReply   = "#FFD479";
+	var cLink    = "#7CE7C4";
+	var cShadow  = "#000000";
+	var shadowSz = 3;
+
+	var fNick = { name: '"Segoe UI", Tahoma, sans-serif', size: 17 };
+	var fText = { name: '"Segoe UI", Tahoma, sans-serif', size: 17 };
+
+	function InitParams(data) {
+		if (data.themeIndex != themeIndex) return;
+
+		cNick   = data.NicknameColor || cNick;
+		cText   = data.TextColor     || cText;
+		cReply  = data.ReplyColor    || cReply;
+		cLink   = data.LinksColor    || cLink;
+		cShadow = data.ShadowColor   || cShadow;
+		if (data.ShadowSize != null) shadowSz = Math.max(0, Math.min(20, data.ShadowSize));
+
+		if (data.FontNickname) fNick = data.FontNickname;
+		if (data.FontText)     fText = data.FontText;
+
+		qtyMessages    = data.QtyMessages || qtyMessages;
+		timeNewMessage = (data.TimeNewMessages || 15) * 1000;
+		hideMessages   = (data.HideMessages  == null) ? hideMessages   : !!data.HideMessages;
+		showSiteIcons  = (data.ShowSiteIcons == null) ? showSiteIcons  : !!data.ShowSiteIcons;
+		showAvatars    = (data.ShowAvatars   == null) ? showAvatars    : !!data.ShowAvatars;
+		nicknameBold   = (data.NicknameBold  == null) ? nicknameBold   : !!data.NicknameBold;
+
+		var sh = '0 ' + shadowSz + 'px ' + (shadowSz + 1) + 'px ' + hexA(cShadow, 0.85);
+
+		apply('.name', { color: cNick, fontFamily: fNick.name, fontSize: fNick.size + 'px',
+		                 textShadow: sh, fontWeight: nicknameBold ? '800' : '400' });
+		apply('.body', { color: cText, fontFamily: fText.name, fontSize: fText.size + 'px', textShadow: sh });
+		apply('.replytext', { color: cReply });
+		apply('a', { color: cLink });
+
+		var av = getStyleRule('.av');
+		if (av) av.display = showAvatars ? '' : 'none';
+		var bg = getStyleRule('.badges');
+		if (bg) bg.display = showSiteIcons ? '' : 'none';
+	}
+
+	function apply(sel, props) {
+		var r = getStyleRule(sel);
+		if (!r) return;
+		for (var k in props) r[k] = props[k];
+	}
+
+	function hexA(hex, a) {
+		hex = String(hex).replace('#', '');
+		if (hex.length == 3) hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+		var n = parseInt(hex, 16);
+		return 'rgba(' + ((n >> 16) & 255) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + a + ')';
+	}
+
+	// ---- platform badge colours -------------------------------------------
+	var SITE_COLORS = {
+		twitch: '#9146FF', youtube: '#FF0033',
+		youtube_moderator: '#FF0033', youtube_subscriber: '#FF0033',
+		vkontakte: '#0077FF', vkplay: '#0A84FF', kick: '#53FC18',
+		trovo: '#19E6C8', wasd: '#E4405F', tiktok: '#25F4EE',
+		rutube: '#FF3300', nuum: '#A855F7', goodgame: '#7BC043',
+		facebook: '#1877F2', discord: '#5865F2', telegram: '#2AABEE',
+		steam: '#66C0F4', spotify: '#1DB954', odnoklassniki: '#EE8208',
+		gipsyteam: '#E4002B', douyu: '#FF7000', streamlabs: '#80F5D2',
+		donationalerts: '#F4A261', donatestream: '#FF7043', donatty: '#2B6CB0',
+		aces: '#E43D30', destream: '#00C2FF', reall: '#1FA2FF',
+		sc2tv: '#C8102E', smashcast: '#D5310E', looch: '#1DB954',
+		yandexmusic: '#FFEE00', itunes: '#FA243C', lastfm: '#BA0000',
+		rutony: '#00A4F2', wtv: '#C4B5FD'
+	};
+
+	function decorateSites(el) {
+		if (!el) return;
+		var imgs = $(el).find('.site img');
+		for (var i = 0; i < imgs.length; i++) {
+			var im = imgs[i];
+			var src = (im.getAttribute('src') || '').toLowerCase();
+			var key = '';
+			for (var k in SITE_COLORS) {
+				if (src.indexOf('/' + k + '.png') >= 0 || src.indexOf(k + '.png') >= 0) { key = k; break; }
+			}
+			im.className = 'site-icon';
+			if (key) {
+				im.setAttribute('data-platform', key);
+				im.title = key;
+				// minimal theme: colour only, no glow
+				im.style.filter = 'drop-shadow(0 0 ' + shadowSz + 'px ' + hexA(SITE_COLORS[key], 0.9) + ')';
+			} else {
+				im.style.filter = 'none';
+			}
+		}
+	}
+
+	// ---- w.tv bridge marker ------------------------------------------------
+	var WTV_MARK = '‍wtv‍';
+
+	function unpackWtv(user) {
+		if (user && user.indexOf(WTV_MARK) === 0) {
+			return { name: user.substr(WTV_MARK.length), wtv: true };
+		}
+		return { name: user, wtv: false };
+	}
+
+	// ---- avatar ----------------------------------------------------------
+	function safeUrl(u) {
+		if (!u) return null;
+		u = String(u).replace(/"/g, '');
+		if (/^https?:\/\//i.test(u)) return u;
+		if (/^data:image\//i.test(u)) return u;
+		return null;
+	}
+
+	function buildAvatar(obj) {
+		if (!showAvatars) return '';
+		var url = safeUrl(obj.user_avatar);
+		if (url) return '<img class="av-img" src="' + url + '" alt="" />';
+		var initial = (obj.user || '?').trim().charAt(0).toUpperCase();
+		return '<span class="av-fallback" style="background:' + (obj.color_nick || '#2A3242') + '">' + initial + '</span>';
+	}
+
+	// ======================================
+
+	function NewMessage(data) {
+		var obj = JSON.parse(data);
+
+		if (obj.clear_chat) {
+			if (obj.message_id) $(".user_mess[message_id='" + obj.message_id + "']").text(obj.text);
+			if (obj.user_id)    $(".user_mess[user_id='" + obj.user_id + "']").text(obj.text);
+			return;
+		}
+
+		obj.avatar_html = buildAvatar(obj);
+
+		var w = unpackWtv(obj.user);
+		obj.user = w.name;
+		if (w.wtv && (!obj.site_img || obj.site_img === '')) {
+			obj.site_img = '<img src="images/wtv.png">';
+		}
+
+		obj.kind = (obj.type == 'alert') ? 'alert'
+		         : (obj.reply == 1)    ? 'reply'
+		         : 'normal';
+
+		$('#content').append($('#message_template').tmpl(obj));
+
+		var el = $('#content').children('.mess').last();
+		el.addClass('m-in');
+		decorateSites(el);
+
+		if (hideMessages) {
+			setTimeout(function() {
+				el.addClass('m-out');
+				setTimeout(function() { el.detach(); }, 450);
+			}, timeNewMessage);
+		}
+
+		if ($('.mess').length > qtyAllMessages) $('.mess:first').detach();
+		UpdateScroll();
+	}
+
+</script>
+
+<script id="message_template" type="text/x-jquery-tmpl">
+<div class="mess k-${kind}">
+	<span class="av">${avatar_html}</span>
+	<span class="name">${user}</span>
+	<span class="badges">${rank_img} ${spec_img} ${sub} ${moderator}</span>
+	<span class="site">${site_img}</span>
+	<span class="colon">:</span>
+	<span class="body">
+		<span class="user_mess" message_id="${message_id}" user_id="${user_id}" style="color:${color_text}">${text}</span>
+	</span>
+</div>
+</script>
+
+</head>
+<body>
+
+<div id="chat-wrapper" class="nano">
+	<div class="nano-content" id="content"></div>
+</div>
+<div id="bottom"></div>
+
+</body>
+</html>
