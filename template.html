@@ -18,8 +18,8 @@
 	var autoScroll = true;
 
 	$(document).ready(function() {
-		SetAutoScrollPerfect();
-		SetSocket();
+		if (typeof SetAutoScrollPerfect === 'function') SetAutoScrollPerfect();
+		if (typeof SetSocket === 'function') SetSocket();
 	});
 
 	// ======================================
@@ -31,8 +31,10 @@
 	var timeNewMessage = 15000;
 	var hideMessages   = true;
 	var showSiteIcons  = true;
+	var showBadges     = true;
 	var showAvatars    = false;
 	var nicknameBold   = true;
+	var userNickColor  = false;
 
 	var cNick    = "#7FD3FF";
 	var cText    = "#FFFFFF";
@@ -41,71 +43,172 @@
 	var cShadow  = "#000000";
 	var shadowSz = 3;
 
-	var fNick = { name: '"Segoe UI", Tahoma, sans-serif', size: 17 };
-	var fText = { name: '"Segoe UI", Tahoma, sans-serif', size: 17 };
+	var fNick = { name: "Segoe UI", size: 17 };
+	var fText = { name: "Segoe UI", size: 17 };
 
 	function InitParams(data) {
-		if (data.themeIndex != themeIndex) return;
+		if (!data) return;
+		if (typeof data === "string") {
+			try { data = JSON.parse(data); } catch(e) { return; }
+		}
+		if (data.themeIndex && data.themeIndex != themeIndex) return;
 
 		cNick   = data.NicknameColor || cNick;
 		cText   = data.TextColor     || cText;
 		cReply  = data.ReplyColor    || cReply;
 		cLink   = data.LinksColor    || cLink;
 		cShadow = data.ShadowColor   || cShadow;
-		if (data.ShadowSize != null) shadowSz = Math.max(0, Math.min(20, data.ShadowSize));
+		if (data.ShadowSize != null) shadowSz = Math.max(0, Math.min(20, parseInt(data.ShadowSize, 10) || 0));
 
 		if (data.FontNickname) fNick = data.FontNickname;
 		if (data.FontText)     fText = data.FontText;
 
-		qtyMessages    = data.QtyMessages || qtyMessages;
-		timeNewMessage = (data.TimeNewMessages || 15) * 1000;
+		qtyMessages    = parseInt(data.QtyMessages, 10) || qtyMessages;
+		timeNewMessage = ((data.TimeNewMessages != null) ? parseInt(data.TimeNewMessages, 10) : 15) * 1000;
 		hideMessages   = (data.HideMessages  == null) ? hideMessages   : !!data.HideMessages;
 		showSiteIcons  = (data.ShowSiteIcons == null) ? showSiteIcons  : !!data.ShowSiteIcons;
+		showBadges     = (data.ShowBadges    == null) ? showBadges     : !!data.ShowBadges;
 		showAvatars    = (data.ShowAvatars   == null) ? showAvatars    : !!data.ShowAvatars;
 		nicknameBold   = (data.NicknameBold  == null) ? nicknameBold   : !!data.NicknameBold;
+		userNickColor  = (data.UserNickColor == null) ? userNickColor  : !!data.UserNickColor;
 
-		var sh = '0 ' + shadowSz + 'px ' + (shadowSz + 1) + 'px ' + hexA(cShadow, 0.85);
+		var sh;
+		if (shadowSz <= 0) {
+			sh = 'none';
+		} else {
+			var cSh = hexA(cShadow, 0.9);
+			var cShSoft = hexA(cShadow, 0.65);
+			sh = '0 1px ' + shadowSz + 'px ' + cSh + ', 0 ' + shadowSz + 'px ' + (shadowSz + 1) + 'px ' + cShSoft + ', 0 0 2px ' + cSh;
+		}
 
-		apply('.name', { color: cNick, fontFamily: fNick.name, fontSize: fNick.size + 'px',
-		                 textShadow: sh, fontWeight: nicknameBold ? '800' : '400' });
-		apply('.body', { color: cText, fontFamily: fText.name, fontSize: fText.size + 'px', textShadow: sh });
+		var nickFont = formatFontFamily(fNick && fNick.name);
+		var nickSize = (fNick && fNick.size ? fNick.size : 17) + 'px';
+		var textFont = formatFontFamily(fText && fText.name);
+		var textSize = (fText && fText.size ? fText.size : 17) + 'px';
+
+		apply('.name', {
+			color: cNick,
+			fontFamily: nickFont,
+			fontSize: nickSize,
+			textShadow: sh,
+			fontWeight: nicknameBold ? '800' : '500'
+		});
+		apply('.body', {
+			color: cText,
+			fontFamily: textFont,
+			fontSize: textSize,
+			textShadow: sh
+		});
+		apply('.colon', {
+			textShadow: sh,
+			color: hexA(cText, 0.65)
+		});
 		apply('.replytext', { color: cReply });
-		apply('a', { color: cLink });
+		apply('.k-reply', { borderLeftColor: cReply });
+		apply('.body a', { color: cLink, textShadow: sh });
+		apply('a', { color: cLink, textShadow: sh });
 
-		var av = getStyleRule('.av');
-		if (av) av.display = showAvatars ? '' : 'none';
-		var bg = getStyleRule('.badges');
-		if (bg) bg.display = showSiteIcons ? '' : 'none';
+		apply('.av', { display: showAvatars ? '' : 'none' });
+		apply('.site', { display: showSiteIcons ? '' : 'none' });
+		apply('.badges', { display: showBadges ? '' : 'none' });
+	}
+
+	function formatFontFamily(name) {
+		if (!name) return '"Segoe UI", Tahoma, Arial, sans-serif';
+		var clean = String(name).replace(/["']/g, '').trim();
+		return '"' + clean + '", Tahoma, Arial, sans-serif';
+	}
+
+	function getRule(sel) {
+		if (typeof getStyleRule === 'function') {
+			try {
+				var r = getStyleRule(sel);
+				if (r) return r;
+			} catch(e) {}
+		}
+		for (var s = 0; s < document.styleSheets.length; s++) {
+			try {
+				var sheet = document.styleSheets[s];
+				var rules = sheet.cssRules || sheet.rules;
+				if (!rules) continue;
+				for (var i = 0; i < rules.length; i++) {
+					if (rules[i].selectorText && rules[i].selectorText.toLowerCase() === sel.toLowerCase()) {
+						return rules[i].style;
+					}
+				}
+			} catch(e) {}
+		}
+		return null;
 	}
 
 	function apply(sel, props) {
-		var r = getStyleRule(sel);
+		var r = getRule(sel);
 		if (!r) return;
-		for (var k in props) r[k] = props[k];
+		for (var k in props) {
+			try { r[k] = props[k]; } catch(e) {}
+		}
 	}
 
-	function hexA(hex, a) {
-		hex = String(hex).replace('#', '');
-		if (hex.length == 3) hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+	function hexA(color, a) {
+		if (!color) return 'rgba(0,0,0,' + a + ')';
+		if (typeof color === 'string' && color.indexOf('rgb') === 0) return color;
+		var hex = String(color).replace('#', '').trim();
+		if (hex.length === 3) hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
 		var n = parseInt(hex, 16);
+		if (isNaN(n)) return 'rgba(0,0,0,' + a + ')';
 		return 'rgba(' + ((n >> 16) & 255) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + a + ')';
 	}
 
 	// ---- platform badge colours -------------------------------------------
 	var SITE_COLORS = {
-		twitch: '#9146FF', youtube: '#FF0033',
-		youtube_moderator: '#FF0033', youtube_subscriber: '#FF0033',
-		vkontakte: '#0077FF', vkplay: '#0A84FF', kick: '#53FC18',
-		trovo: '#19E6C8', wasd: '#E4405F', tiktok: '#25F4EE',
-		rutube: '#FF3300', nuum: '#A855F7', goodgame: '#7BC043',
-		facebook: '#1877F2', discord: '#5865F2', telegram: '#2AABEE',
-		steam: '#66C0F4', spotify: '#1DB954', odnoklassniki: '#EE8208',
-		gipsyteam: '#E4002B', douyu: '#FF7000', streamlabs: '#80F5D2',
-		donationalerts: '#F4A261', donatestream: '#FF7043', donatty: '#2B6CB0',
-		aces: '#E43D30', destream: '#00C2FF', reall: '#1FA2FF',
-		sc2tv: '#C8102E', smashcast: '#D5310E', looch: '#1DB954',
-		yandexmusic: '#FFEE00', itunes: '#FA243C', lastfm: '#BA0000',
-		rutony: '#00A4F2', wtv: '#C4B5FD'
+		twitch: '#9146FF',
+		youtube: '#FF0033',
+		youtube_moderator: '#FF0033',
+		youtube_subscriber: '#FF0033',
+		vkontakte: '#0077FF',
+		vk: '#0077FF',
+		vkplay: '#0A84FF',
+		vkplaylive: '#0A84FF',
+		kick: '#53FC18',
+		trovo: '#19E6C8',
+		wasd: '#E4405F',
+		tiktok: '#25F4EE',
+		rutube: '#FF3300',
+		nuum: '#A855F7',
+		goodgame: '#7BC043',
+		facebook: '#1877F2',
+		discord: '#5865F2',
+		telegram: '#2AABEE',
+		tg: '#2AABEE',
+		steam: '#66C0F4',
+		spotify: '#1DB954',
+		odnoklassniki: '#EE8208',
+		ok: '#EE8208',
+		boosty: '#F15F2C',
+		donationalerts: '#F4A261',
+		donatestream: '#FF7043',
+		donatty: '#2B6CB0',
+		tonady: '#FF4567',
+		cloudtips: '#00D68F',
+		memalerts: '#FFAA00',
+		lavahost: '#7928CA',
+		lava: '#7928CA',
+		tribute: '#3182CE',
+		yoomoney: '#8038A6',
+		gipsyteam: '#E4002B',
+		douyu: '#FF7000',
+		streamlabs: '#80F5D2',
+		aces: '#E43D30',
+		destream: '#00C2FF',
+		reall: '#1FA2FF',
+		sc2tv: '#C8102E',
+		smashcast: '#D5310E',
+		looch: '#1DB954',
+		yandexmusic: '#FFEE00',
+		itunes: '#FA243C',
+		lastfm: '#BA0000',
+		rutony: '#00A4F2',
+		wtv: '#C4B5FD'
 	};
 
 	function decorateSites(el) {
@@ -115,15 +218,24 @@
 			var im = imgs[i];
 			var src = (im.getAttribute('src') || '').toLowerCase();
 			var key = '';
-			for (var k in SITE_COLORS) {
-				if (src.indexOf('/' + k + '.png') >= 0 || src.indexOf(k + '.png') >= 0) { key = k; break; }
+			var cleanSrc = src.split(/[?#]/)[0];
+			var base = cleanSrc.substring(cleanSrc.lastIndexOf('/') + 1).replace(/\.[a-z0-9]+$/i, '');
+
+			if (SITE_COLORS[base]) {
+				key = base;
+			} else {
+				for (var k in SITE_COLORS) {
+					if (base.indexOf(k) >= 0 || src.indexOf('/' + k + '.') >= 0) {
+						key = k;
+						break;
+					}
+				}
 			}
 			im.className = 'site-icon';
 			if (key) {
 				im.setAttribute('data-platform', key);
 				im.title = key;
-				// minimal theme: colour only, no glow
-				im.style.filter = 'drop-shadow(0 0 ' + shadowSz + 'px ' + hexA(SITE_COLORS[key], 0.9) + ')';
+				im.style.filter = 'drop-shadow(0 0 ' + Math.max(2, shadowSz) + 'px ' + hexA(SITE_COLORS[key], 0.9) + ')';
 			} else {
 				im.style.filter = 'none';
 			}
@@ -131,11 +243,12 @@
 	}
 
 	// ---- w.tv bridge marker ------------------------------------------------
-	var WTV_MARK = '‍wtv‍';
+	var WTV_MARK = '\u200Dwtv\u200D';
 
 	function unpackWtv(user) {
-		if (user && user.indexOf(WTV_MARK) === 0) {
-			return { name: user.substr(WTV_MARK.length), wtv: true };
+		if (!user) return { name: '', wtv: false };
+		if (user.indexOf(WTV_MARK) >= 0) {
+			return { name: user.split(WTV_MARK).join(''), wtv: true };
 		}
 		return { name: user, wtv: false };
 	}
@@ -143,28 +256,70 @@
 	// ---- avatar ----------------------------------------------------------
 	function safeUrl(u) {
 		if (!u) return null;
-		u = String(u).replace(/"/g, '');
-		if (/^https?:\/\//i.test(u)) return u;
-		if (/^data:image\//i.test(u)) return u;
+		u = String(u).replace(/["'<>]/g, '').trim();
+		if (/^(javascript|vbscript|data:(?!image\/)):/i.test(u)) return null;
+		if (/^(https?:\/\/|\/|\.\/|\.\.\/|data:image\/|file:\/\/\/)/i.test(u)) return u;
+		if (/^[a-zA-Z0-9_\-./]+\.(png|jpg|jpeg|gif|webp|svg)/i.test(u)) return u;
 		return null;
+	}
+
+	function escapeHtml(text) {
+		if (!text) return '';
+		return String(text)
+			.replace(/&/g, '&amp;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;')
+			.replace(/"/g, '&quot;')
+			.replace(/'/g, '&#039;');
 	}
 
 	function buildAvatar(obj) {
 		if (!showAvatars) return '';
 		var url = safeUrl(obj.user_avatar);
-		if (url) return '<img class="av-img" src="' + url + '" alt="" />';
-		var initial = (obj.user || '?').trim().charAt(0).toUpperCase();
-		return '<span class="av-fallback" style="background:' + (obj.color_nick || '#2A3242') + '">' + initial + '</span>';
+		if (url) {
+			return '<img class="av-img" src="' + url + '" alt="" onerror="this.style.display=\'none\'" />';
+		}
+		var cleanUser = (obj.user || '?').replace(/<[^>]*>/g, '').trim();
+		var initial = escapeHtml(cleanUser.charAt(0).toUpperCase() || '?');
+		var bg = (obj.color_nick && obj.color_nick !== '') ? obj.color_nick : '#2A3242';
+		return '<span class="av-fallback" style="background:' + bg + '">' + initial + '</span>';
 	}
 
 	// ======================================
 
 	function NewMessage(data) {
-		var obj = JSON.parse(data);
+		var obj;
+		try {
+			obj = (typeof data === 'string') ? JSON.parse(data) : data;
+		} catch (e) {
+			return;
+		}
+		if (!obj) return;
 
 		if (obj.clear_chat) {
-			if (obj.message_id) $(".user_mess[message_id='" + obj.message_id + "']").text(obj.text);
-			if (obj.user_id)    $(".user_mess[user_id='" + obj.user_id + "']").text(obj.text);
+			var hasTarget = false;
+			if (obj.message_id) {
+				hasTarget = true;
+				var targetMess = $('.user_mess').filter(function() { return $(this).attr('message_id') == obj.message_id; });
+				if (obj.text) {
+					targetMess.text(obj.text);
+				} else {
+					targetMess.closest('.mess').remove();
+				}
+			}
+			if (obj.user_id) {
+				hasTarget = true;
+				var targetUser = $('.user_mess').filter(function() { return $(this).attr('user_id') == obj.user_id; });
+				if (obj.text) {
+					targetUser.text(obj.text);
+				} else {
+					targetUser.closest('.mess').remove();
+				}
+			}
+			if (!hasTarget) {
+				$('#content').empty();
+			}
+			if (typeof UpdateScroll === 'function') UpdateScroll();
 			return;
 		}
 
@@ -172,13 +327,21 @@
 
 		var w = unpackWtv(obj.user);
 		obj.user = w.name;
-		if (w.wtv && (!obj.site_img || obj.site_img === '')) {
+		if (w.wtv) {
 			obj.site_img = '<img src="images/wtv.png">';
 		}
 
 		obj.kind = (obj.type == 'alert') ? 'alert'
-		         : (obj.reply == 1)    ? 'reply'
+		         : (obj.reply == 1)      ? 'reply'
 		         : 'normal';
+
+		var displayNickColor = '';
+		if (userNickColor && obj.color_nick && obj.color_nick.trim() !== '') {
+			displayNickColor = 'color:' + obj.color_nick + ';';
+		}
+		obj.nick_style = displayNickColor;
+
+		obj.mess_style = (obj.color_text && obj.color_text.trim() !== '') ? ('color:' + obj.color_text) : '';
 
 		$('#content').append($('#message_template').tmpl(obj));
 
@@ -189,12 +352,33 @@
 		if (hideMessages) {
 			setTimeout(function() {
 				el.addClass('m-out');
-				setTimeout(function() { el.detach(); }, 450);
+				setTimeout(function() {
+					el.detach();
+					if (typeof UpdateScroll === 'function') UpdateScroll();
+				}, 450);
 			}, timeNewMessage);
 		}
 
-		if ($('.mess').length > qtyAllMessages) $('.mess:first').detach();
-		UpdateScroll();
+		if (!hideMessages) {
+			while ($('.mess').length > qtyMessages) {
+				$('.mess:first').detach();
+			}
+		} else {
+			var active = $('.mess:not(.m-out)');
+			if (active.length > qtyMessages) {
+				var old = active.first();
+				old.addClass('m-out');
+				setTimeout(function() {
+					old.detach();
+					if (typeof UpdateScroll === 'function') UpdateScroll();
+				}, 250);
+			}
+			if ($('.mess').length > qtyAllMessages) {
+				$('.mess:first').detach();
+			}
+		}
+
+		if (typeof UpdateScroll === 'function') UpdateScroll();
 	}
 
 </script>
@@ -202,12 +386,12 @@
 <script id="message_template" type="text/x-jquery-tmpl">
 <div class="mess k-${kind}">
 	<span class="av">${avatar_html}</span>
-	<span class="name">${user}</span>
-	<span class="badges">${rank_img} ${spec_img} ${sub} ${moderator}</span>
+	<span class="name" style="${nick_style}">${user}</span>
+	<span class="badges">${rank_img}${spec_img}${sub}${moderator}</span>
 	<span class="site">${site_img}</span>
 	<span class="colon">:</span>
 	<span class="body">
-		<span class="user_mess" message_id="${message_id}" user_id="${user_id}" style="color:${color_text}">${text}</span>
+		<span class="user_mess" message_id="${message_id}" user_id="${user_id}" style="${mess_style}">${text}</span>
 	</span>
 </div>
 </script>

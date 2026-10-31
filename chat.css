@@ -1,5 +1,5 @@
 @charset "utf-8";
-/* minimal-chat - no cards, just text. Nothing covers the gameplay. */
+/* minimal-chat - no cards, just text. Clean, lightweight, never covers gameplay. */
 
 html, body {
 	background-color: transparent;
@@ -10,6 +10,13 @@ html, body {
 	height: 100%;
 	font-size: 17px;
 	font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+	-webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar {
+	width: 0px;
+	height: 0px;
+	background: transparent;
 }
 
 #chat-wrapper {
@@ -19,21 +26,50 @@ html, body {
 	width: 100%;
 }
 
-#content, #chat-wrapper { box-sizing: border-box; }
+#content, #chat-wrapper {
+	box-sizing: border-box;
+}
 
-/* one chat line - flat, no background, no border */
+/* one chat line - flat, no background, no card, pure minimal aesthetic */
 .mess {
 	display: flex;
 	align-items: baseline;
 	flex-wrap: wrap;
 	line-height: 1.45;
-	padding: 1px 12px;
+	padding: 2px 12px 2px 10px;
+	border-left: 2px solid transparent;
 	word-break: break-word;
+	box-sizing: border-box;
 }
 
-/* replies get a thin left tick instead of a whole card */
-.k-reply .name { font-style: italic; }
-.k-alert  .name { text-transform: uppercase; letter-spacing: .3px; }
+/* replies get a subtle colored accent tick on the left */
+.k-reply {
+	border-left-color: #FFD479;
+}
+.k-reply .name {
+	font-style: italic;
+}
+
+/* alerts get an orange accent tick on the left and uppercase name */
+.k-alert {
+	border-left-color: #FF9F1A;
+}
+.k-alert .name {
+	text-transform: uppercase;
+	letter-spacing: 0.4px;
+}
+
+/* vertically align non-text inline items relative to baseline */
+.av, .badges, .site {
+	align-self: center;
+}
+
+/* hide empty containers so they do not add unwanted whitespace */
+.badges:empty,
+.site:empty,
+.av:empty {
+	display: none !important;
+}
 
 /* ---------------- avatar (off by default) ---------------- */
 .av {
@@ -48,13 +84,24 @@ html, body {
 	width: 20px;
 	height: 20px;
 	border-radius: 50%;
-	display: flex;
+	object-fit: cover;
+	box-sizing: border-box;
+}
+
+.av-img {
+	display: block;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+
+.av-fallback {
+	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	object-fit: cover;
 	font-size: 11px;
 	font-weight: 800;
 	color: #06070F;
+	line-height: 1;
+	user-select: none;
 }
 
 /* ---------------- nickname ---------------- */
@@ -64,11 +111,12 @@ html, body {
 	font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
 	color: #7FD3FF;
 	white-space: nowrap;
-	text-shadow: 0 3px 4px rgba(0, 0, 0, 0.85);
+	text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9), 0 3px 4px rgba(0, 0, 0, 0.65), 0 0 2px rgba(0, 0, 0, 0.9);
 }
 
+/* ---------------- user badges (sub, mod, rank, etc.) ---------------- */
 .badges {
-	display: flex;
+	display: inline-flex;
 	align-items: center;
 	gap: 3px;
 	flex: 0 0 auto;
@@ -77,40 +125,61 @@ html, body {
 
 .badges img {
 	height: 14px;
+	width: auto;
 	vertical-align: middle;
-	margin-bottom: 0;
+	margin: 0;
+	object-fit: contain;
 }
 
+/* ---------------- colon separator ---------------- */
 .colon {
-	color: #6E7A8C;
+	color: rgba(255, 255, 255, 0.65);
 	margin: 0 5px 0 2px;
 	flex: 0 0 auto;
-	text-shadow: 0 3px 4px rgba(0, 0, 0, 0.85);
+	text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9), 0 3px 4px rgba(0, 0, 0, 0.65), 0 0 2px rgba(0, 0, 0, 0.9);
 }
 
-/* ---------------- message text ---------------- */
+/* ---------------- message body ---------------- */
 .body {
 	font-size: 17px;
 	line-height: 1.45;
 	color: #FFFFFF;
 	font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
-	text-shadow: 0 3px 4px rgba(0, 0, 0, 0.85);
+	text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9), 0 3px 4px rgba(0, 0, 0, 0.65), 0 0 2px rgba(0, 0, 0, 0.9);
 	overflow-wrap: anywhere;
+	word-break: break-word;
 	flex: 1 1 auto;
 	min-width: 0;
 }
 
-.replytext { color: #FFD479; }
-
-.body a {
-	color: #7CE7C4;
-	text-decoration: none;
-	text-shadow: 0 3px 4px rgba(0, 0, 0, 0.85);
+.replytext {
+	color: #FFD479;
 }
 
-img { margin-bottom: -2px; }
+/* links */
+a, .body a {
+	color: #7CE7C4;
+	text-decoration: none;
+	word-break: break-all;
+	text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9), 0 3px 4px rgba(0, 0, 0, 0.65), 0 0 2px rgba(0, 0, 0, 0.9);
+	transition: opacity 0.15s ease;
+}
 
-/* ---------------- platform badge (small, colour only) ---------------- */
+a:hover, .body a:hover {
+	text-decoration: underline;
+	opacity: 0.9;
+}
+
+/* emotes / smiles / stickers */
+.body img {
+	vertical-align: -0.22em;
+	max-height: 1.35em;
+	width: auto;
+	margin: 0 1px;
+	object-fit: contain;
+}
+
+/* ---------------- platform badge (small, colour glow) ---------------- */
 .site {
 	flex: 0 0 auto;
 	display: inline-flex;
@@ -126,28 +195,57 @@ img { margin-bottom: -2px; }
 	display: block;
 	object-fit: contain;
 	background: rgba(0, 0, 0, 0.35);
-	/* тонкое светлое кольцо: тёмные логотипы (W.TV) иначе сливаются в пятно */
+	/* subtle inner white ring to keep dark logos distinct */
 	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+	margin: 0;
+	box-sizing: border-box;
 }
 
-/* ---------------- animation: quick and quiet ---------------- */
+/* ---------------- animation: smooth and clean ---------------- */
 .m-in {
 	animation: mIn 0.22s ease-out both;
 }
 
 @keyframes mIn {
-	from { opacity: 0; transform: translateX(-6px); }
-	to   { opacity: 1; transform: translateX(0); }
+	from {
+		opacity: 0;
+		transform: translateX(-6px);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
 }
 
 .m-out {
-	animation: mOut 0.45s ease-in both;
+	animation: mOut 0.45s ease-in forwards;
+	overflow: hidden !important;
+	pointer-events: none;
 }
 
 @keyframes mOut {
-	0%   { opacity: 1; transform: translateX(0); max-height: 90px; margin-bottom: 0; }
-	40%  { opacity: 0.5; }
-	100% { opacity: 0; transform: translateX(12px); max-height: 0; margin-bottom: -2px; }
+	0% {
+		opacity: 1;
+		transform: translateX(0);
+		max-height: 250px;
+		padding-top: 2px;
+		padding-bottom: 2px;
+		margin-bottom: 0;
+	}
+	40% {
+		opacity: 0.5;
+	}
+	100% {
+		opacity: 0;
+		transform: translateX(12px);
+		max-height: 0;
+		padding-top: 0;
+		padding-bottom: 0;
+		margin-bottom: 0;
+		border-left-width: 0;
+	}
 }
 
-#bottom { height: 0; }
+#bottom {
+	height: 0;
+}

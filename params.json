@@ -45,7 +45,7 @@
     },
     {
       "name": "ShadowSize",
-      "desc": { "russian": "Размер тени (px) - влияет на читаемость поверх игры", "english": "Shadow size (px)", "tchinese": "Shadow size (px)" },
+      "desc": { "russian": "Размер тени (px) — читаемость поверх игры", "english": "Shadow size (px)", "tchinese": "Shadow size (px)" },
       "type": "integer",
       "default": 3,
       "min": 0,
@@ -56,6 +56,12 @@
       "desc": { "russian": "Жирный никнейм", "english": "Bold nickname", "tchinese": "Bold nickname" },
       "type": "bool",
       "default": true
+    },
+    {
+      "name": "UserNickColor",
+      "desc": { "russian": "Цвет ника из чата (Twitch/VK)", "english": "User chat color for nickname", "tchinese": "User chat color for nickname" },
+      "type": "bool",
+      "default": false
     },
     {
       "name": "QtyMessages",
@@ -88,6 +94,12 @@
     {
       "name": "ShowSiteIcons",
       "desc": { "russian": "Показывать иконки площадок", "english": "Show site icons", "tchinese": "Show site icons" },
+      "type": "bool",
+      "default": true
+    },
+    {
+      "name": "ShowBadges",
+      "desc": { "russian": "Показывать значки (модератор, саб)", "english": "Show badges (mod, sub)", "tchinese": "Show badges" },
       "type": "bool",
       "default": true
     }
